@@ -1,5 +1,6 @@
 package com.nwo.prodigy.care4project;
 
+import android.os.StrictMode;
 import android.widget.EditText;
 
 import static com.nwo.prodigy.care4project.Constantes.*;
@@ -24,15 +25,20 @@ import java.util.Map;
 public class ConnectionPHP {
     URL url;
     String data;
-   // URLConnection connection;
+
     HttpURLConnection connection;
     BufferedReader reader;
     HashMap<String,String> nameValuepair;
+
 
     public ConnectionPHP(){
         nameValuepair = new HashMap<>();
         data = "";
         reader = null;
+    }
+
+    public void clearNameValuePair(){
+        nameValuepair.clear();
     }
 
     public void addNom(EditText editNom){
@@ -83,7 +89,7 @@ public class ConnectionPHP {
     //String variant
     public void addNom(String nom){
         if (!VerificateurEntreeText.isTextEmpty(nom)) {
-            nameValuepair.put(NODE_PRENOM, nom);
+            nameValuepair.put(NODE_NOM, nom);
         }
     }
     public void addPrenom(String prenom){
@@ -94,7 +100,7 @@ public class ConnectionPHP {
 
     public void addTelephone(String telephone){
         if (!VerificateurEntreeText.isTextEmpty(telephone)) {
-            nameValuepair.put(NODE_USERNAME, telephone);
+            nameValuepair.put(NODE_TELEPHONE, telephone);
         }
     }
 
@@ -106,7 +112,7 @@ public class ConnectionPHP {
 
     public void addEmail(String email){
         if (!VerificateurEntreeText.isTextEmpty(email)) {
-            nameValuepair.put(NODE_PASSWORD, email.toLowerCase());
+            nameValuepair.put(NODE_EMAIL, email.toLowerCase());
         }
     }
 
@@ -115,11 +121,6 @@ public class ConnectionPHP {
             nameValuepair.put(NODE_PASSWORD, password);
         }
     }
-
-
-
-
-
 
 
 
@@ -161,6 +162,7 @@ public class ConnectionPHP {
 
 
     public void sendRequest(String destinationURL){
+        StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder().permitNetwork().build());
 
         setUrl(destinationURL);
 
@@ -169,6 +171,7 @@ public class ConnectionPHP {
         try {
             connection = (HttpURLConnection) url.openConnection();
             connection.setDoOutput(true);
+
             OutputStreamWriter wr = new OutputStreamWriter(connection.getOutputStream());
             System.out.println(convertMapToURLPair());
             wr.write(convertMapToURLPair());
@@ -178,19 +181,21 @@ public class ConnectionPHP {
         }
     }
 
-    public void getResponse(){
+    public String getResponse(){
+        StrictMode.setThreadPolicy(new StrictMode.ThreadPolicy.Builder().permitNetwork().build());
+        StringBuilder sb = new StringBuilder();
         try {
             reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-            StringBuilder sb = new StringBuilder();
+
             String line = null;
             String textFromServer;
 
             while((line = reader.readLine()) != null)
             {
                 // Append server response in string
-                sb.append(line + "\n");
+                sb.append(line);
             }
-            textFromServer = sb.toString();
+
         }
 
         catch (Exception ex){
@@ -198,12 +203,14 @@ public class ConnectionPHP {
         finally {
 
             try {
+                if (reader != null)
                 reader.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
 
+        return sb.toString();
     }
 
 
